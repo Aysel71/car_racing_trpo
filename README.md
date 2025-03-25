@@ -141,57 +141,57 @@ $
 - Input: CNN-extracted features.
 - Output: Action probabilities.
 - LSTM hidden state:
-$
+$$
 h_t, c_t = \text{LSTM}(x_t, h_{t-1}, c_{t-1})
-$
+$$
 - Output action probabilities:
-$
+$$
 \pi(a|s) = \text{softmax}(W h_t)
-$
+$$
 
 ### 3. **Value Network** (State Value Estimation)
 - Same architecture as policy network.
 - Predicts the value of a state:
-$
+$$
 V(s) = W_v h_t
-$
+$$
 
 ---
 
 ## 🔎 TRPO Optimization Strategy
 TRPO solves the following constrained optimization problem:
-$
+$$
 \max_{\theta} \mathbb{E}_{s, a} \left[ \frac{\pi_{\theta}(a|s)}{\pi_{\theta_{\text{old}}}(a|s)} A(s, a) \right]
-$
+$$
 
 ### 1. **Advantage Estimation (GAE)**
 Advantage function using Generalized Advantage Estimation:
-$
+$$
 A_t = r_t + \gamma V(s_{t+1}) - V(s_t)
-$
+$$
 
 ### 2. **Conjugate Gradient**
 Conjugate gradient solves:
-$
+$$
 Ax = g
-$
+$$
 where:
-- $ A $ — Fisher Information Matrix
-- $ g $  — Policy Gradient
+- $$ A $$ — Fisher Information Matrix
+- $$ g $$  — Policy Gradient
 
 ### 3. **Backtracking Line Search**
 Ensures that KL divergence constraint is satisfied:
-$
+$$
 D_{KL}(\pi_{\theta} || \pi_{\theta_{\text{old}}}) < \delta
-$
+$$
 
 ### 4. **KL Divergence Calculation**
-$
+$$
 D_{KL} = \sum_{i} p_i \log \frac{p_i}{q_i}
-$
+$$
 where:
-- $ p_i $ — current policy distribution
-- $ q_i $ — old policy distribution
+- $$ p_i $$ — current policy distribution
+- $$ q_i $$ — old policy distribution
 
 ---
 
