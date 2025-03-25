@@ -243,7 +243,6 @@ where:
 - $p_i$ — current policy distribution
 - $q_i$ — old policy distribution
 
----
 
 ## 🏆 Training Procedure
 ### Hyperparameters:
@@ -257,7 +256,214 @@ where:
 | Batch size | `32` |
 | Max steps per episode | `1000` |
 
+
+
+## 📊 **Performance Monitoring Graphs**
+The repository includes four key graphs to track the performance of the TRPO agent during training. Each graph provides insight into different aspects of the agent's learning process and policy updates.
+
+
+
+###  **Episode Rewards** (Top Left)
+#### ✅ **What It Measures:**
+- Total reward collected at the end of each episode.
+- Measures how well the agent is performing in the environment.  
+- Higher values indicate that the agent is learning to maximize the objective.
+
+#### ✅ **Why It Matters:**
+- If the reward increases steadily → The agent is learning successfully.
+- If the reward decreases or becomes unstable → The policy may be diverging or overfitting.
+
+#### ✅ **Code to Generate:**
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_episode_rewards(rewards, window=10):
+    plt.figure(figsize=(8, 6))
+    plt.plot(rewards, label='Episode Reward')
+    
+    # Moving average over last 10 episodes
+    if len(rewards) >= window:
+        moving_avg = np.convolve(rewards, np.ones(window)/window, mode='valid')
+        plt.plot(range(window-1, len(rewards)), moving_avg, label=f'{window}-ep Moving Average', color='red')
+    
+    plt.title('Episode Rewards')
+    plt.xlabel('Episode')
+    plt.ylabel('Total Reward')
+    plt.legend()
+    plt.show()
+```
+
+#### ✅ **Interpretation:**
+- A steady upward trend → The agent is improving.
+- A plateau or sharp drop → The agent might have hit a local minimum or policy collapse.  
+
 ---
+
+###  **Value Loss** (Top Right)
+#### ✅ **What It Measures:**
+- Measures the difference between predicted state value and actual reward.  
+- Calculated using Mean Squared Error (MSE):  
+$\text{Value Loss} = \frac{1}{N} \sum_{i=1}^{N} (V(s_i) - R_i)^2$
+
+where:  
+- $V(s_i)$ = predicted state value  
+- $R_i$ = actual return  
+
+#### ✅ **Why It Matters:**
+- High variance → Unstable value function updates.  
+- Low variance → Value function is converging.  
+
+#### ✅ **Code to Generate:**
+```python
+def plot_value_loss(value_losses):
+    plt.figure(figsize=(8, 6))
+    plt.plot(value_losses)
+    plt.title('Value Losses')
+    plt.xlabel('Update')
+    plt.ylabel('Value Loss')
+    plt.show()
+```
+
+#### ✅ **Interpretation:**
+- High spikes early in training → Expected during exploration.  
+- Decreasing variance → The value function is stabilizing and converging.  
+- If loss remains high → The value function might be underfitting or the policy might be unstable.  
+
+---
+
+### 3. **KL Divergence** (Bottom Left)
+#### ✅ **What It Measures:**
+- KL divergence measures the difference between the old and updated policy distributions:
+
+$D_{KL}(p || q) = \sum_{i} p_i \log \frac{p_i}{q_i}$
+
+where:  
+- $p_i$ – Old policy distribution  
+- $q_i$ – Updated policy distribution  
+
+#### ✅ **Why It Matters:**
+- High KL divergence → Large policy shifts, which might destabilize training.  
+- Low KL divergence → Policy updates are conservative and stable.  
+
+#### ✅ **Code to Generate:**
+```python
+def plot_kl_divergence(kl_values, kl_threshold=0.01):
+    plt.figure(figsize=(8, 6))
+    plt.plot(kl_values)
+    plt.axhline(kl_threshold, color='red', linestyle='--', label='Min KL Threshold')
+    plt.title('KL Divergence')
+    plt.xlabel('Update')
+    plt.ylabel('KL Divergence')
+    plt.legend()
+    plt.show()
+```
+
+#### ✅ **Interpretation:**
+- **Increasing KL divergence** → The policy is adapting and exploring more.  
+- **Excessively high KL divergence** → The policy update might be too aggressive.  
+- If KL divergence > threshold → TRPO update should backtrack to ensure stability.  
+
+### **Policy Entropy** (Bottom Right)
+#### ✅ **What It Measures:**
+- Measures the randomness or uncertainty in the policy's action selection:
+
+$H(\pi) = -\sum_a \pi(a|s) \log \pi(a|s)$
+
+where:  
+- $\pi(a|s)\$ = Probability of taking action $a$ under state $s$ 
+
+#### ✅ **Why It Matters:**
+- High entropy → The agent is exploring a wide range of actions.  
+- Low entropy → The agent is exploiting and has settled on a stable policy.  
+- If entropy becomes too low → The agent might be stuck in a local minimum.  
+
+#### ✅ **Code to Generate:**
+```python
+def plot_policy_entropy(entropy_values):
+    plt.figure(figsize=(8, 6))
+    plt.plot(entropy_values)
+    plt.title('Policy Entropy')
+    plt.xlabel('Update')
+    plt.ylabel('Entropy')
+    plt.show()
+```
+
+#### ✅ **Interpretation:**
+- **High entropy** → Encourages exploration.  
+- **Gradual decline** → The agent is shifting from exploration to exploitation.  
+- If entropy collapses too quickly → The policy might be overfitting.  
+
+---
+
+## 🏆 **Summary Table**
+| Graph | What it Measures | Goal | Problem Signs |
+|-------|------------------|------|---------------|
+| **Episode Rewards** | Total reward per episode | Steady increase | Sharp drops or collapse |
+| **Value Loss** | Error between predicted and actual value | Convergence to low value | High variance, spikes |
+| **KL Divergence** | Difference between old and new policy | Stable updates | High spikes or plateaus |
+| **Policy Entropy** | Uncertainty in policy | Gradual decrease | Early collapse or flatline |
+
+---
+
+## 💡 **Best Practices**
+✅ Keep **KL divergence** below the threshold to ensure stable policy updates.  
+✅ Ensure **entropy** decreases gradually → Too fast = overfitting.  
+✅ **Value loss** should stabilize over time → High spikes = need for lower learning rate.  
+✅ Reward curve should show a **steady upward trend** → Sharp drops = policy instability.  
+
+---
+
+## 🚀 **How the Graphs Fit into Training**
+1. **Episode Rewards** – Measures how well the agent is learning.  
+2. **Value Loss** – Tracks the accuracy of state value estimation.  
+3. **KL Divergence** – Ensures policy updates are not too aggressive.  
+4. **Policy Entropy** – Balances exploration vs. exploitation.  
+
+---
+
+## ✅ **Potential Fixes Based on Graph Behavior**
+| Problem | Fix |
+|---------|------|
+| **High KL Divergence** | Reduce step size or tighten KL threshold |
+| **High Value Loss Variance** | Reduce learning rate or add entropy regularization |
+| **Entropy Collapsing Too Early** | Increase entropy coefficient |
+| **Sharp Drop in Rewards** | Check for policy collapse; rollback last update |
+
+---
+
+## ✅ **Complete Plotting Code**
+Here's how to generate all the graphs together:
+
+```python
+def plot_training_results(rewards, value_losses, kl_values, entropy_values):
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+
+    # Episode Rewards
+    axs[0, 0].plot(rewards, label='Total Reward')
+    moving_avg = np.convolve(rewards, np.ones(10)/10, mode='valid')
+    axs[0, 0].plot(range(9, len(rewards)), moving_avg, label='10-ep Moving Average', color='red')
+    axs[0, 0].set_title('Episode Rewards')
+    
+    # Value Losses
+    axs[0, 1].plot(value_losses)
+    axs[0, 1].set_title('Value Losses')
+
+    # KL Divergence
+    axs[1, 0].plot(kl_values)
+    axs[1, 0].axhline(0.01, color='red', linestyle='--', label='Min KL Threshold')
+    axs[1, 0].set_title('KL Divergence')
+
+    # Policy Entropy
+    axs[1, 1].plot(entropy_values)
+    axs[1, 1].set_title('Policy Entropy')
+
+    plt.tight_layout()
+    plt.show()
+```
+
+---
+
 
 ## 📊 Results
 ✅ Average reward: `> 900` after 100 episodes.  
