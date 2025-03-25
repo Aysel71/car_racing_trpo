@@ -492,10 +492,10 @@ def plot_training_results(rewards, value_losses, kl_values, entropy_values):
 ![Results](assets/car_race_first.gif)
 
 ### Episode Rewards
-![Episode Rewards](assets/episode_rewards.jpg)
+![Episode Rewards](assets/photo1.jpg)
 
 ### Value Losses
-![Value Losses](assets/value_losses.jpeg)
+![Value Losses](assets/phot1.jpeg)
 
 
 ## 🎥 Demo
