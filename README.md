@@ -15,9 +15,7 @@ pip install gymnasium
 ```
 ## Environment Visualisation
 
-![Environment](assets/360927477598601222 (2).gif)
-
-
+![Environment](assets/car_racing.gif)
 
 ### **Objective**
 - The goal is to complete the track while maximizing the total reward.
