@@ -500,11 +500,14 @@ def plot_training_results(rewards, value_losses, kl_values, entropy_values):
 
 # Attemt 2
 
-### Episode Rewards
 
 ![Episode Rewards](assets/car_raci.gif)
 
+### Episode Rewards
+![Episode Rewards](assets/photo21.jpg)
+
 ### Value Losses
+![Value Losses](assets/phot22.jpeg)
 
 
 ## 🎥 Demo
