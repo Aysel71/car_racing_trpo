@@ -13,6 +13,11 @@ We use the `CarRacing-v3` environment from OpenAI Gymnasium, which is a classic 
 ```bash
 pip install gymnasium
 ```
+## Environment Visualisation
+
+![Environment](assets/360927477598601222 (2).gif)
+
+
 
 ### **Objective**
 - The goal is to complete the track while maximizing the total reward.
