@@ -42,14 +42,10 @@ The state is represented as an **RGB image** of the environment from a bird's-ey
 1. Convert to grayscale (to reduce complexity):  
    $\text{Gray} = 0.299 R + 0.587 G + 0.114 B$
 2. Normalize pixel values to `[0, 1]`:
-   $
-   x_{\text{normalized}} = \frac{x}{255.0}
-   $
+   $x_{\text{normalized}} = \frac{x}{255.0}$
 3. Stack last 4 frames to introduce temporal context:  
    Final state shape:
-   $
-   (4, 96, 96)
-   $
+   $(4, 96, 96)$
 
 ### Why Frame Stacking?  
 - A single frame does not provide motion information (e.g., velocity, direction).  
@@ -80,12 +76,10 @@ The environment has **5 discrete actions**:
 ### **Action Encoding**  
 Actions are represented as a **categorical distribution** over the 5 discrete actions.  
 The policy outputs logits:
-$
-\pi(a|s) = \text{softmax}(W h_t)
-$
+$\pi(a|s) = \text{softmax}(W h_t)$
 where:
-- $ W $ — policy weights
-- $ h_t $ — hidden state from LSTM
+- $W$ — policy weights
+- $h_t$ — hidden state from LSTM
 
 Example action distribution:
 ```
@@ -131,57 +125,41 @@ The CNN processes the stacked frames and extracts spatial features:
 
 **Attention Layer:**
 - `Conv2d(64, 1)` → Applies a sigmoid-based attention mechanism:
-$
-\text{attention}(x) = \sigma(W x)
-$
+$\text{attention}(x) = \sigma(W x)$
 
 ### 2. **LSTM Policy Network** (Temporal Features)
 - Input: CNN-extracted features.
 - Output: Action probabilities.
 - LSTM hidden state:
-$$
-h_t, c_t = \text{LSTM}(x_t, h_{t-1}, c_{t-1})
-$$
+$h_t, c_t = \text{LSTM}(x_t, h_{t-1}, c_{t-1})$
 - Output action probabilities:
-$$
-\pi(a|s) = \text{softmax}(W h_t)
-$$
+$\pi(a|s) = \text{softmax}(W h_t)$
 
 ### 3. **Value Network** (State Value Estimation)
 - Same architecture as policy network.
 - Predicts the value of a state:
-$$
-V(s) = W_v h_t
-$$
+$V(s) = W_v h_t$
 
 ---
 
 ## 🔎 TRPO Optimization Strategy
 TRPO solves the following constrained optimization problem:
-$$
-\max_{\theta} \mathbb{E}_{s, a} \left[ \frac{\pi_{\theta}(a|s)}{\pi_{\theta_{\text{old}}}(a|s)} A(s, a) \right]
-$$
+$\max_{\theta} \mathbb{E}_{s, a} \left[ \frac{\pi_{\theta}(a|s)}{\pi_{\theta_{\text{old}}}(a|s)} A(s, a) \right]$
 
 ### 1. **Advantage Estimation (GAE)**
 Advantage function using Generalized Advantage Estimation:
-$$
-A_t = r_t + \gamma V(s_{t+1}) - V(s_t)
-$$
+$A_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
 
 ### 2. **Conjugate Gradient**
 Conjugate gradient solves:
-$$
-Ax = g
-$$
+$Ax = g$
 where:
-- $$ A $$ — Fisher Information Matrix
-- $$ g $$  — Policy Gradient
+- $A$ — Fisher Information Matrix
+- $g$  — Policy Gradient
 
 ### 3. **Backtracking Line Search**
 Ensures that KL divergence constraint is satisfied:
-$$
-D_{KL}(\pi_{\theta} || \pi_{\theta_{\text{old}}}) < \delta
-$$
+$D_{KL}(\pi_{\theta} || \pi_{\theta_{\text{old}}}) < \delta$
 
 ### 4. **KL Divergence Calculation**
 $$
