@@ -17,6 +17,7 @@ pip install gymnasium
 
 ![Environment](assets/car_racing.gif)
 
+
 ### **Objective**
 - The goal is to complete the track while maximizing the total reward.
 - The agent receives a negative reward for going off the track or making excessive turns.
