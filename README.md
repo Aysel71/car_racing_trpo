@@ -6,17 +6,6 @@ This repository implements a **Trust Region Policy Optimization (TRPO)** agent w
 ## 🌟 Overview
 This project implements an **RNN-based TRPO agent** for reinforcement learning using PyTorch and Gymnasium. The agent is designed to navigate the CarRacing-v3 environment, learning to maximize the reward by improving driving strategies. 
 
-### Key Features:
-✅ **TRPO-based agent**: Uses trust region optimization for stable policy updates.  
-✅ **Recurrent architecture**: Captures temporal dependencies using LSTM.  
-✅ **CNN-based feature extraction**: Uses convolutional layers for spatial information processing.  
-✅ **Frame stacking**: Stacks multiple frames to capture motion dynamics.  
-✅ **Reward shaping**: Applies customized penalties and bonuses for better training.  
-✅ **Exploration-exploitation trade-off**: Balances exploration using entropy regularization.  
-✅ **Efficient off-track detection**: Uses image-based analysis to detect when the car is off-track.  
-
----
-
 ## 🚦 Environment: CarRacing-v3
 We use the `CarRacing-v3` environment from OpenAI Gymnasium, which is a classic continuous control problem where an agent must learn to drive a car on a procedurally generated track.
 
@@ -47,20 +36,107 @@ The state is represented as an **RGB image** of the environment from a bird's-ey
    Final state shape:
    $(4, 96, 96)$
 
-### Why Frame Stacking?  
-- A single frame does not provide motion information (e.g., velocity, direction).  
-- Stacking frames helps the agent infer movement and momentum from changes across frames.
 
-Example state tensor:
+## 🌍 Initial State
+### 🏁 What is the Initial State?
+The **initial state** refers to the environment's configuration at the beginning of each episode. In the CarRacing-v3 environment, the initial state is generated procedurally and defines the starting point for the agent's trajectory.
+
+### **Environment Initialization**
+When an episode starts, the `CarRacing-v3` environment generates:
+- A **procedurally generated track**.
+- A **starting position** for the car.
+- A **starting velocity** of zero (car is stationary).
+- A **fixed camera perspective** from a bird's-eye view.
+- The agent’s car is always positioned near the bottom-center of the frame at the beginning.
+
+###  **Track Generation**
+The track is generated using a procedural algorithm:
+- Curves, bends, and straight segments are randomly generated.
+- Track width, curvature, and complexity vary between episodes.
+- A valid track ensures that it is possible to complete the race.
+
+###  **Initial State Format**
+At the beginning of each episode, the environment returns:
+
+```python
+state, info = env.reset()
+```
+where:
+- `state`: A `(96, 96, 3)` RGB image of the track from the top-down view.
+- `info`: A dictionary containing metadata about the state, including:
+  - `track_position`: Initial car position relative to the track.
+  - `on_track`: Boolean value indicating whether the car starts on the track.
+  - `cumulative_reward`: Initial reward (set to zero).
+  - `steps_outside_track`: Initial count of steps off the track (set to zero).
+
+### **Preprocessing Initial State**
+The raw state is preprocessed as follows:
+- **Grayscale Conversion** – Reduces the complexity from 3 channels to 1:
+
+$\text{Gray} = 0.299 R + 0.587 G + 0.114 B$
+
+- **Normalization** – Pixel values are scaled to `[0, 1]`:
+- 
+$x_{\text{normalized}} = \frac{x}{255.0}$
+
+- **Frame Stacking** – The initial state is repeated 4 times to fill the frame stack.
+- 
+WHY?
+
+Since the car is stationary at the beginning, the initial state does not contain any motion information. Stacking the same initial frame allows the CNN to:
+✅ Build initial convolutional filters based on static spatial patterns.  
+✅ Infer road position, color, and shape early in training.  
+✅ Create consistent input for the LSTM network to avoid unstable training.  
+
+Example:
+```python
+observation, info = env.reset()
+for _ in range(4):
+    self.frames.append(observation)
+```
+- This gives the agent a consistent initial perception of the environment, even though it hasn't taken any actions yet.
+
+### Example Initial State:
 ```
 State shape: (4, 96, 96)
-Frame 1 → t - 0
-Frame 2 → t - 1
-Frame 3 → t - 2
-Frame 4 → t - 3
+Frame 1 → Initial grayscale frame
+Frame 2 → Copy of initial frame
+Frame 3 → Copy of initial frame
+Frame 4 → Copy of initial frame
 ```
 
+### **State Tensor After Preprocessing**
+After preprocessing and stacking, the state tensor has the following structure:
+```
+Tensor shape: (4, 96, 96)
+```
+where:
+- `4` → Number of stacked frames
+- `96` → Image height
+- `96` → Image width
+
+Example tensor:
+```python
+tensor([[[0.1, 0.3, ...], ...],  # Frame 1
+        [[0.1, 0.3, ...], ...],  # Frame 2
+        [[0.1, 0.3, ...], ...],  # Frame 3
+        [[0.1, 0.3, ...], ...]]) # Frame 4
+```
+
+
+### 7. **Effect of Initial State on Training**
+🔹 A **good starting position** (centered on the track) increases the chances of success.  
+🔹 A **poor starting position** (on the edge of the track) forces the agent to quickly learn recovery strategies.  
+🔹 The **procedural track generation** increases the difficulty of generalization — the agent must learn to adapt to different starting configurations.  
+
 ---
+
+### ✅ Initial State Insights:
+1. **No action is required** initially; the car is at rest.  
+2. The first frame stack gives the agent the ability to "see" the environment.  
+3. Random starting tracks and procedural generation increase exploration challenges.  
+4. Frame stacking helps the agent process temporal context from the very first step.  
+
 
 ## 🎮 Action Space
 The environment has **5 discrete actions**:
