@@ -15,7 +15,7 @@ pip install gymnasium
 ```
 ## Environment Visualisation
 
-![Environment](assets/car_racing.gif)
+![Environment](assets/new_car.gif)
 
 
 ### **Objective**
