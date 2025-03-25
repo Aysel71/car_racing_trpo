@@ -162,12 +162,10 @@ Ensures that KL divergence constraint is satisfied:
 $D_{KL}(\pi_{\theta} || \pi_{\theta_{\text{old}}}) < \delta$
 
 ### 4. **KL Divergence Calculation**
-$$
-D_{KL} = \sum_{i} p_i \log \frac{p_i}{q_i}
-$$
+$D_{KL} = \sum_{i} p_i \log \frac{p_i}{q_i}$
 where:
-- $$ p_i $$ — current policy distribution
-- $$ q_i $$ — old policy distribution
+- $p_i$ — current policy distribution
+- $q_i$ — old policy distribution
 
 ---
 
