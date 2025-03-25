@@ -488,6 +488,7 @@ def plot_training_results(rewards, value_losses, kl_values, entropy_values):
 ✅ On-track percentage: `> 90%`.  
 
 ## Results and Analysis
+# Attemt 1 
 
 ![Results](assets/car_race_first.gif)
 
@@ -496,6 +497,14 @@ def plot_training_results(rewards, value_losses, kl_values, entropy_values):
 
 ### Value Losses
 ![Value Losses](assets/phot1.jpeg)
+
+# Attemt 2
+
+### Episode Rewards
+
+![Episode Rewards](assets/car_raci.gif)
+
+### Value Losses
 
 
 ## 🎥 Demo
