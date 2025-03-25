@@ -37,9 +37,50 @@ The state is represented as an **RGB image** of the environment from a bird's-ey
    $(4, 96, 96)$
 
 
+## 🎮 Action Space
+The environment has **5 discrete actions**:
+
+| Action | Description | Index |
+|--------|-------------|-------|
+| `Nothing` | No input | `0` |
+| `Left` | Steer left | `1` |
+| `Right` | Steer right | `2` |
+| `Gas` | Accelerate | `3` |
+| `Brake` | Apply brakes | `4` |
+
+### **Action Encoding**  
+Actions are represented as a **categorical distribution** over the 5 discrete actions.  
+The policy outputs logits:
+$\pi(a|s) = \text{softmax}(W h_t)$
+where:
+- $W$ — policy weights
+- $h_t$ — hidden state from LSTM
+
+Example action distribution:
+```
+[0.1, 0.2, 0.2, 0.4, 0.1]
+```
+
+## 🎯 Reward Structure
+| Condition | Reward/Penalty |
+|-----------|----------------|
+| Stay on track | +0.3 per step |
+| Off track | Penalty up to -3.0 |
+| Driving straight | +0.2 |
+| Correct turn at road edge | +0.8 |
+| Excessive repetition of same action | -0.2 |
+| Moderate speed | +0.3 |
+| Braking | -0.1 |
+
+### Reward Shaping Strategy:
+1. **Positive reinforcement** for staying on the road.
+2. **Penalties** for drifting off the track.
+3. **Extra bonus** for making turns at the correct time.
+4. **Entropy penalty** for over-exploration of the same action.
+
+---
+
 ## 🌍 Initial State
-### 🏁 What is the Initial State?
-The **initial state** refers to the environment's configuration at the beginning of each episode. In the CarRacing-v3 environment, the initial state is generated procedurally and defines the starting point for the agent's trajectory.
 
 ### **Environment Initialization**
 When an episode starts, the `CarRacing-v3` environment generates:
@@ -137,55 +178,6 @@ tensor([[[0.1, 0.3, ...], ...],  # Frame 1
 3. Random starting tracks and procedural generation increase exploration challenges.  
 4. Frame stacking helps the agent process temporal context from the very first step.  
 
-
-## 🎮 Action Space
-The environment has **5 discrete actions**:
-
-| Action | Description | Index |
-|--------|-------------|-------|
-| `Nothing` | No input | `0` |
-| `Left` | Steer left | `1` |
-| `Right` | Steer right | `2` |
-| `Gas` | Accelerate | `3` |
-| `Brake` | Apply brakes | `4` |
-
-### **Action Encoding**  
-Actions are represented as a **categorical distribution** over the 5 discrete actions.  
-The policy outputs logits:
-$\pi(a|s) = \text{softmax}(W h_t)$
-where:
-- $W$ — policy weights
-- $h_t$ — hidden state from LSTM
-
-Example action distribution:
-```
-[0.1, 0.2, 0.2, 0.4, 0.1]
-```
-
-### **Action Frequency Tracking**  
-To avoid local minima where the agent relies too heavily on a small subset of actions, the agent:
-- Tracks action frequencies.
-- Applies entropy regularization to encourage action diversity.
-
----
-
-## 🎯 Reward Structure
-| Condition | Reward/Penalty |
-|-----------|----------------|
-| Stay on track | +0.3 per step |
-| Off track | Penalty up to -3.0 |
-| Driving straight | +0.2 |
-| Correct turn at road edge | +0.8 |
-| Excessive repetition of same action | -0.2 |
-| Moderate speed | +0.3 |
-| Braking | -0.1 |
-
-### Reward Shaping Strategy:
-1. **Positive reinforcement** for staying on the road.
-2. **Penalties** for drifting off the track.
-3. **Extra bonus** for making turns at the correct time.
-4. **Entropy penalty** for over-exploration of the same action.
-
 ---
 
 ## 🏎️ Architecture
@@ -220,7 +212,7 @@ $V(s) = W_v h_t$
 
 ## 🔎 TRPO Optimization Strategy
 TRPO solves the following constrained optimization problem:
-$\max_{\theta} \mathbb{E}_{s, a} \left[ \frac{\pi_{\theta}(a|s)}{\pi_{\theta_{\text{old}}}(a|s)} A(s, a) \right]$
+$max_{\theta} \mathbb{E}_{s, a} (\frac{\pi (a|s, theta)}{\pi (a|s, old)} A(s, a)$
 
 ### 1. **Advantage Estimation (GAE)**
 Advantage function using Generalized Advantage Estimation:
@@ -242,6 +234,27 @@ $D_{KL} = \sum_{i} p_i \log \frac{p_i}{q_i}$
 where:
 - $p_i$ — current policy distribution
 - $q_i$ — old policy distribution
+
+### Pseudocode
+
+```
+for episode in range(n_episodes):
+    states, actions, rewards, next_states = sample_trajectories(policy)
+
+    advantages = estimate_advantages()
+    update_value_network()
+
+    L = surrogate_loss(old_probs, new_probs)
+    KL = KL_divergence(old_probs, new_probs)
+
+    g = gradient(L)
+    d_KL = gradient(KL)
+    search_dir = conjugate_gradient_with_KL_Hessian(d_kl, g)
+    k = calculate_k()
+    max_step = k * search_dir()
+
+    update_policy_net()
+```
 
 
 ## 🏆 Training Procedure
