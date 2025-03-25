@@ -487,7 +487,7 @@ def plot_training_results(rewards, value_losses, kl_values, entropy_values):
 ✅ Completion rate: `> 95%`.  
 ✅ On-track percentage: `> 90%`.  
 
----
+![Results](assets/car_race_first.gif)
 
 ## 🎥 Demo
 You can visualize the agent's behavior:
