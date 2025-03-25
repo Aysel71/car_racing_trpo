@@ -40,9 +40,7 @@ The state is represented as an **RGB image** of the environment from a bird's-ey
 
 ### **Preprocessed State:**
 1. Convert to grayscale (to reduce complexity):  
-   $
-   \text{Gray} = 0.299 R + 0.587 G + 0.114 B
-   $
+   $\text{Gray} = 0.299 R + 0.587 G + 0.114 B$
 2. Normalize pixel values to `[0, 1]`:
    $
    x_{\text{normalized}} = \frac{x}{255.0}
